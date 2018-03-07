@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+	.chat
+{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.chat li
+{
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px dotted #B3A9A9;
+}
+
+.chat li.left .chat-body
+{
+    margin-left: 60px;
+}
+
+.chat li.right .chat-body
+{
+    margin-right: 60px;
+}
+
+
+.chat li .chat-body p
+{
+    margin: 0;
+    color: #777777;
+}
+
+.panel .slidedown .glyphicon, .chat .glyphicon
+{
+    margin-right: 5px;
+}
+
+.panel-body
+{
+    overflow-y: scroll;
+    height: 250px;
+}
+
+::-webkit-scrollbar-track
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar
+{
+    width: 12px;
+    background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
+}
+.msg_container_base{
+  background: #e5e5e5;
+  margin: 0;
+  padding: 0 10px 10px;
+  max-height:80vh;
+  overflow-x:hidden;
+}
+.beauty-li{
+  background: white;
+  padding: 10px;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  max-width:100%;
+}
+</style>
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+	<title></title>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-10">
+            <div class="panel panel-primary">
+                <div class="panel-heading" id="accordion">
+                    <strong id="notification"></strong><br><br>
+                    <strong id="typing"></strong>
+                    <button style="float: right; margin-top: -20px;" class="btn btn-danger btn-sm" id="logout">Logout</btton>
+                    
+                </div>
+            <div>
+                <div class="panel-body msg_container_base">
+                    <ul class="chat">
+                        
+                        
+                    </ul>
+                </div>
+                <div class="panel-footer">
+                	<form id="chat-form">
+                    <div class="input-group">
+                        <input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." />
+                        <span class="input-group-btn">
+                        	<input type="submit" class="btn btn-warning btn-sm" id="btn-chat" value="send" name="">
+                            
+                        </span>
+                    </div>
+                </form>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js" type="text/javascript"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript">
+	// to clear localstroge that contain token
+	$('#logout').click(function(){
+		localStorage.clear();
+		window.location.replace('http://localhost:3000');
+	});
+	// function to get name of from url
+	function getQueryStringValue (key) {  
+	  return decodeURIComponent(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));  
+	}  
+	var socket = io();
+	var name = getQueryStringValue('name');
+
+	socket.on('connect', function(){
+		// notification when user joined
+		socket.emit('joinNotification', {
+		who:name,
+		notification:' joined the chat!'
+		});
+		// event handler to fecth all saved chat
+		socket.on('getMsg', function(result){
+			result.forEach(function(single) {
+				$('.chat').append(`<li class="left clearfix beauty-li"><span class="chat-img pull-left">
+                        </span>
+                            <div class="chat-body clearfix">
+                                <div class="header">
+                                    <strong class="primary-font">${single.sender}</strong>
+                                </div>
+                                <p>
+                                    ${single.message}
+                                </p>
+                            </div>
+                        </li>`);
+			});
+		});
+	});
+
+	// event handler for displaying who joined the chat
+
+	socket.on('newNotification', function(data){
+		$('#notification').text(data.who+data.notification);
+	});
+	// event handler for showing who logout from the chat
+	socket.on('newLeaveNotification', function(data){
+			$('#notification').text(data.who+data.notification);
+	});
+	// event hander for showing someone tying notiication
+	socket.on('newTypingNotification', function(data){
+			$('#typing').text(data.typist+data.notification);
+			setTimeout( "$('#typing').text('');", 3000);
+
+
+	});
+	// event emission for typing status
+	$('#btn-input').keydown(function(e){
+		socket.emit('typingNotification', {
+			typist:name,
+			notification:' is typing.....'
+		});
+	});
+	// event firing when user submit his message 
+	$('#chat-form').on('submit', function(e){
+		e.preventDefault();
+		socket.emit('createMsg',{
+			name:getQueryStringValue("name"),
+			text:$('#btn-input').val()
+		});
+		$('#btn-input').val('');
+	});
+	// event handler for getting current chat of user
+	socket.on('newMsg', function(msg){
+		$('.chat').append(`<li class="left clearfix beauty-li"><span class="chat-img pull-left">
+                        </span>
+                            <div class="chat-body clearfix">
+                                <div class="header">
+                                    <strong class="primary-font">${msg.from}</strong>
+                                </div>
+                                <p>
+                                    ${msg.msg}
+                                </p>
+                            </div>
+                        </li>`);
+		// code to auto scroll the chat window when user submit his msg
+		$(".msg_container_base").stop().animate({ scrollTop: $(".msg_container_base")[0].scrollHeight}, 1000);
+
+	});
+</script>
+</body>
+</html>
+
+
+
+
+
