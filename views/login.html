@@ -115,6 +115,9 @@
 			<div class="alert alert-danger" style="display: none;">
 				
 			</div>
+			<div class="alert alert-success" style="display: none;">
+				
+			</div>
 			<div class="col-md-6 col-md-offset-3">
 				<div class="panel panel-login">
 					<div class="panel-heading">
@@ -205,10 +208,12 @@
         success: function(data) {
               console.log(data);
               $('#login-form-link').trigger( "click" );
+              $('.alert-success').show().text('Registered! Please Login To Enter Chat Room');
+
             },
         error: function(error){
         	console.log(error);
-        	$('.alert').show().text(error.responseText);
+        	$('.alert-danger').show().text(error.responseText);
         }    
     	});
     	e.preventDefault();
@@ -231,7 +236,7 @@
           	  }
             },
         error: function(error){
-        	$('.alert').show().text(error.responseText);
+        	$('.alert-danger').show().text(error.responseText);
 
         }   
 

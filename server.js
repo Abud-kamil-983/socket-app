@@ -112,27 +112,22 @@ eventEmitter.on('saveChat', function(msg){
     }
   });
 });
-// event handler to fetch chat data from database
-eventEmitter.on('fetchChat', function(){
-  chatModel.find({}, function(err, result){
-    if (err) {
-      console.log(err);
-    }
-    else{
-      // after saving data this is event for giving data to socket event 
-      eventEmitter.emit('getChat', result);
-    }
-  });
-});
+
+// start socket connection
 
 io.on('connection', function(socket){
     var username = '';
-    // firing event to fetching chat from database
-    eventEmitter.emit('fetchChat');
-    // handling getChat event to fire socket event
-    eventEmitter.on('getChat', function(result){
-      io.emit('getMsg',result);
+
+    chatModel.find({}, function(err, result){
+      if (err) {
+        console.log(err);
+      }
+      else{
+      // emit event to fecht data to client side
+      socket.emit('getMsg',result);
+      }
     });
+
     // event hander for getting msg from client 
     socket.on('createMsg',function(msg){
       // firing event to save the new msg
@@ -143,7 +138,7 @@ io.on('connection', function(socket){
         msg:msg.text
 
       });
-    });
+});
     // handling the event fired to notify new user joined
     socket.on('joinNotification',function(data){
       username = data.who;
