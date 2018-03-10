@@ -220,7 +220,7 @@
 		var data  = {"email":$('#email-signin').val(), "password":$('#password-signin').val()};
 
 		$.ajax({
-        url: 'http://ec2-18-221-163-96.us-east-2.compute.amazonaws.com/login',
+        url: 'http://localhost:3000/login',
         type: 'post',
         dataType: 'json',
         data: data,
